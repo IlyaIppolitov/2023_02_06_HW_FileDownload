@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileDownload", "FileDownload\FileDownload.csproj", "{FB5A1769-C4FC-4432-95EF-2476BBD80CEB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibFileDownload", "LibFileDownload\LibFileDownload.csproj", "{633B2B37-6C08-44CC-B085-CC5F33B8B0A5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FB5A1769-C4FC-4432-95EF-2476BBD80CEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB5A1769-C4FC-4432-95EF-2476BBD80CEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB5A1769-C4FC-4432-95EF-2476BBD80CEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB5A1769-C4FC-4432-95EF-2476BBD80CEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{633B2B37-6C08-44CC-B085-CC5F33B8B0A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{633B2B37-6C08-44CC-B085-CC5F33B8B0A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{633B2B37-6C08-44CC-B085-CC5F33B8B0A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{633B2B37-6C08-44CC-B085-CC5F33B8B0A5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6EFF4F85-3C30-4B18-BA05-0CCBC0A94C12}
+	EndGlobalSection
+EndGlobal
