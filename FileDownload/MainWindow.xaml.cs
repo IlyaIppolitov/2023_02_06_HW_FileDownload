@@ -32,7 +32,7 @@ namespace FileDownload
 
         public string downloadFileName = @"https://github.com/rodion-m/SystemProgrammingCourse2022/raw/master/files/payments_19mb.zip";
         public string saveFileName = @"D:\FilesToRead\payments_19mb.zip";
-        CancellationTokenSource cts;
+        CancellationTokenSource? cts;
 
         private async void buttonDownload_Click(object sender, RoutedEventArgs e)
         {

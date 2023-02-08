@@ -8,31 +8,36 @@ namespace LibFileDownload
         public static async Task DownloadFileToPathAsync(string fileName, string outFullPath, CancellationToken token, ProgressStatus progressStatus)
         {
             // Проверка не нулевых вхожных данных
-            if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException("fileName");
-            if (string.IsNullOrEmpty(outFullPath)) throw new ArgumentNullException("fullPathWhereToSave");
+            if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException($"Неверно указан путь к файлу fileName: {fileName}");
+            if (string.IsNullOrEmpty(outFullPath)) throw new ArgumentNullException($"Неверно указано имя файла outFullPath: {outFullPath}");
 
             // Поток для сохранения файла
             await using var fileStream = File.OpenWrite(outFullPath);
             // Определение HttpClient
             using var httpClient = new HttpClient();
+            var request = new HttpRequestMessage(HttpMethod.Get, fileName)
+            {
+                Headers = { Range = new System.Net.Http.Headers.RangeHeaderValue((long?)progressStatus.ActBytes, null) }
+            };
 
             try
             {
+                using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
+
                 // Получение ответа по факту прочтения заголовков (содержимое ещё не прочитано)
-                using var responseFile = await httpClient.GetAsync(
-                    fileName, HttpCompletionOption.ResponseHeadersRead, token);
+                //using var responseFile = await httpClient.GetAsync(
+                //    fileName, HttpCompletionOption.ResponseHeadersRead, token);
 
                 // Проверка кода ответа
-                responseFile.EnsureSuccessStatusCode();
-                if (responseFile.StatusCode != System.Net.HttpStatusCode.OK)
-                    throw new System.Net.WebException($"Код ответа не соответствует ожидаемому ОК, полученный код ответа: {responseFile.StatusCode}");
+                if (response.StatusCode != System.Net.HttpStatusCode.PartialContent)
+                    throw new System.Net.WebException($"Код ответа не соответствует ожидаемому PartialContent, полученный код ответа: {response.StatusCode}");
 
 
                 // ReadAsStreamAsync() -    Сериализует HTTP-содержимое и возвращает поток,
                 //                          представляющий содержимое в асинхронной операции.
-                await using var contentPart = await responseFile.Content.ReadAsStreamAsync(token);
+                await using var contentPart = await response.Content.ReadAsStreamAsync(token);
 
-                var fileLen = responseFile.Content.Headers.ContentLength;
+                var fileLen = response.Content.Headers.ContentLength;
                 if (fileLen == 0) throw new ArgumentException("File has no length!");
                 progressStatus.TotalBytes = (long) fileLen;
 
@@ -77,7 +82,7 @@ namespace LibFileDownload
 
 
             public long TotalBytes { get; set; }
-            float ActBytes { get; set; }
+            public float ActBytes { get; set; }
             public float Add(float actBytes)
             {
                 ActBytes += actBytes;
