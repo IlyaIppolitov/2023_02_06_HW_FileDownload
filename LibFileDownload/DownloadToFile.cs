@@ -92,7 +92,6 @@ namespace LibFileDownload
         }
         public class ProgressStatusEventArgs
         {
-            // Сумма, на которую изменился счет
             public float CurStatus { get; }
             public ProgressStatusEventArgs(float curStatus)
             {
