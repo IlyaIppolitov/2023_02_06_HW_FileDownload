@@ -25,17 +25,25 @@ namespace FileDownload
         public MainWindow()
         {
             InitializeComponent();
+            pbDownload.Minimum = 0;
+            pbDownload.Maximum = 1;
+            pbDownload.Value = 0;
         }
 
         public string downloadFileName = @"https://github.com/rodion-m/SystemProgrammingCourse2022/raw/master/files/payments_19mb.zip";
         public string saveFileName = @"D:\FilesToRead\payments_19mb.zip";
-        CancellationTokenSource cts = new CancellationTokenSource();
+        CancellationTokenSource cts;
 
         private async void buttonDownload_Click(object sender, RoutedEventArgs e)
         {
+            cts = new CancellationTokenSource();
+            pbDownload.Value = 0;
+            var progressStatus = new DownloadToFile.ProgressStatus();
+            progressStatus.Notify += UpdateProgressBar;
+
             try
             {
-                await DownloadToFile.DownloadFileToPathAsync(downloadFileName, saveFileName, cts);
+                await DownloadToFile.DownloadFileToPathAsync(downloadFileName, saveFileName, cts.Token, progressStatus);
             }
             catch (Exception ex)
             {
@@ -46,6 +54,13 @@ namespace FileDownload
         private void buttonCancel_Click(object sender, RoutedEventArgs e)
         {
             cts.Cancel();
+            cts.Dispose();
+        }
+
+        private void UpdateProgressBar(DownloadToFile.ProgressStatus sender, DownloadToFile.ProgressStatusEventArgs e)
+        {
+            Dispatcher.Invoke(() => pbDownload.Value = e.CurStatus);
+            if (pbDownload.Value == pbDownload.Maximum) MessageBox.Show("Загрзука успешно завершена");
         }
     }
 }

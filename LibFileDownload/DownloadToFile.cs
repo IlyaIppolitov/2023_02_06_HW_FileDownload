@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Security.Cryptography.X509Certificates;
 
 namespace LibFileDownload
 {
     public class DownloadToFile
     {
-        public static async Task DownloadFileToPathAsync(string fileName, string outFullPath, CancellationTokenSource cts)
+        public static async Task DownloadFileToPathAsync(string fileName, string outFullPath, CancellationToken token, ProgressStatus progressStatus)
         {
             // Проверка не нулевых вхожных данных
             if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException("fileName");
@@ -19,7 +20,7 @@ namespace LibFileDownload
             {
                 // Получение ответа по факту прочтения заголовков (содержимое ещё не прочитано)
                 using var responseFile = await httpClient.GetAsync(
-                    fileName, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
+                    fileName, HttpCompletionOption.ResponseHeadersRead, token);
 
                 // Проверка кода ответа
                 responseFile.EnsureSuccessStatusCode();
@@ -29,10 +30,11 @@ namespace LibFileDownload
 
                 // ReadAsStreamAsync() -    Сериализует HTTP-содержимое и возвращает поток,
                 //                          представляющий содержимое в асинхронной операции.
-                await using var contentPart = await responseFile.Content.ReadAsStreamAsync(cts.Token).ConfigureAwait(false);
+                await using var contentPart = await responseFile.Content.ReadAsStreamAsync(token);
 
                 var fileLen = responseFile.Content.Headers.ContentLength;
                 if (fileLen == 0) throw new ArgumentException("File has no length!");
+                progressStatus.TotalBytes = (long) fileLen;
 
 
                 // Определяем буфер (не знаю почему такой размер =)
@@ -40,31 +42,56 @@ namespace LibFileDownload
                 // Условно бесконечный цикл с выходов в случае чтения 0 байт
                 while (true)
                 {
-                    int bytesRead = await contentPart.ReadAsync(buffer);
+                    int bytesRead = await contentPart.ReadAsync(buffer, token);
                     if (bytesRead == 0)
                     {
                         break;
                     }
-                    Console.WriteLine(bytesRead);
 
                     if (bytesRead == buffer.Length)
                     {
-                        await fileStream.WriteAsync(buffer);
+                        await fileStream.WriteAsync(buffer, token);
                     }
                     else
                     {
-                        await fileStream.WriteAsync(buffer.Take(bytesRead).ToArray());
+                        await fileStream.WriteAsync(buffer.Take(bytesRead).ToArray(), token);
                     }
+                    progressStatus.Add(bytesRead);
                 }
 
             }
-            catch (TaskCanceledException) when (cts.IsCancellationRequested)
+            catch (TaskCanceledException) when (token.IsCancellationRequested)
             {
                 throw new System.Net.WebException($"Загрузка была прервана пользователем!");
             }
             catch (TaskCanceledException)
             {
                 throw new System.Net.WebException($"Не знаю чего случилось, но загрузка прервана!");
+            }
+        }
+
+        public class ProgressStatus
+        {
+            public delegate void ProgressStatusHandler(ProgressStatus sender, ProgressStatusEventArgs e);
+            public event ProgressStatusHandler? Notify; // Определение события
+
+
+            public long TotalBytes { get; set; }
+            float ActBytes { get; set; }
+            public float Add(float actBytes)
+            {
+                ActBytes += actBytes;
+                Notify?.Invoke(this, new ProgressStatusEventArgs((float)ActBytes / TotalBytes));
+                return ((float)ActBytes / TotalBytes);
+            }
+        }
+        public class ProgressStatusEventArgs
+        {
+            // Сумма, на которую изменился счет
+            public float CurStatus { get; }
+            public ProgressStatusEventArgs(float curStatus)
+            {
+                CurStatus = curStatus;
             }
         }
     }
